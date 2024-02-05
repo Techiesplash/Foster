@@ -16,6 +16,7 @@ namespace Foster.Framework.Storage
 	{
 		public string CurrentDirectory { get; set; } = "";
 
+		public Dictionary<Type, IAssetLoader> AssetLoader = DefaultLoaders.Dictionary;
 		private class ContentEnumerator : IEnumerator<string>
 		{
 			public string[] Locations;
@@ -65,11 +66,11 @@ namespace Foster.Framework.Storage
 		#region Directory
 		public virtual bool FileExists(string relativePath)
 		{
-			return File.Exists(CurrentDirectory + relativePath);
+			return File.Exists(Path.Join(CurrentDirectory, relativePath));
 		}
 		public virtual bool DirectoryExists(string relativePath)
 		{
-			return Directory.Exists(CurrentDirectory + relativePath);
+			return Directory.Exists(Path.Join(CurrentDirectory, relativePath));
 		}
 		public virtual bool Exists(string name)
 		{
@@ -103,17 +104,36 @@ namespace Foster.Framework.Storage
 
 		public virtual Stream OpenRead(string relativePath)
 		{
-			return File.OpenRead(CurrentDirectory + relativePath);
+			return File.OpenRead(Path.Join(CurrentDirectory, relativePath));
 		}
 
 		public virtual byte[] ReadAllBytes(string relativePath)
 		{
-			return File.ReadAllBytes(CurrentDirectory + relativePath);
+			return File.ReadAllBytes(Path.Join(CurrentDirectory, relativePath));
 		}
 
 		public virtual string ReadAllText(string relativePath)
 		{
-			return File.ReadAllText(CurrentDirectory + relativePath);
+			return File.ReadAllText(Path.Join(CurrentDirectory, relativePath));
+		}
+
+		#endregion
+
+		#region Asset Loading
+
+		public virtual T Load<T>(string relativePath, params object[] args)
+		{
+			if (AssetLoader.TryGetValue(typeof(T), out var loader))
+			{
+				return (T)loader.Load(this, relativePath, args);
+			}
+
+			throw new InvalidOperationException($"No loader found for type {typeof(T)}");
+		}
+
+		public virtual void RegisterLoader(IAssetLoader loader)
+		{
+			AssetLoader[loader.AssetType] = loader;
 		}
 
 		#endregion
