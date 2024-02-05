@@ -75,7 +75,6 @@ internal static class ShaderDefaults
 					float4 position : SV_POSITION;
 					float2 tex : TEXCOORD0;
 					float4 color : COLOR0;
-                    // R = Multiply, G = Wash, B = Fill, A = Padding
 					float4 type : COLOR1;
 				};
 				Texture2D u_texture : register(t0);
