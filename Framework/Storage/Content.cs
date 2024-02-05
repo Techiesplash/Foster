@@ -16,7 +16,9 @@ namespace Foster.Framework.Storage
 	{
 		public string CurrentDirectory { get; set; } = "";
 
-		public Dictionary<Type, IAssetLoader> AssetLoader = DefaultLoaders.Dictionary;
+		protected Dictionary<Type, IAssetLoader> _assetLoaders = DefaultLoaders.Dictionary;
+		public IReadOnlyDictionary<Type, IAssetLoader> AssetLoaders => _assetLoaders.AsReadOnly();
+
 		private class ContentEnumerator : IEnumerator<string>
 		{
 			public string[] Locations;
@@ -123,7 +125,7 @@ namespace Foster.Framework.Storage
 
 		public virtual T Load<T>(string relativePath, params object[] args)
 		{
-			if (AssetLoader.TryGetValue(typeof(T), out var loader))
+			if (_assetLoaders.TryGetValue(typeof(T), out var loader))
 			{
 				return (T)loader.Load(this, relativePath, args);
 			}
@@ -133,7 +135,12 @@ namespace Foster.Framework.Storage
 
 		public virtual void RegisterLoader(IAssetLoader loader)
 		{
-			AssetLoader[loader.AssetType] = loader;
+			_assetLoaders[loader.AssetType] = loader;
+		}
+
+		public virtual void UnregisterLoader(IAssetLoader loader)
+		{
+			_assetLoaders.Remove(loader.AssetType);
 		}
 
 		#endregion
